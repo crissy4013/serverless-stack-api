@@ -1,3 +1,4 @@
+# NOTE: update this with your service name
 service: notes-app-api
 
 # Create an optimized package for our functions
@@ -13,10 +14,15 @@ provider:
   name: aws
   runtime: nodejs10.x
   stage: prod
-  region: us-east-1
+  region: us-east-2
+  # To load environment variables externally
+  # rename env.example to .env and uncomment
+  # the following line. Also, make sure to not
+  # commit your .env.
+  #
+  #environment:
+  #  sampleEnvVar: ${env:SAMPLE_ENV_VAR}
 
-  # These environment variables are made available to our functions
-  # under process.env.
   environment:
     tableName: notes
     stripeSecretKey: ${env:STRIPE_SECRET_KEY}
@@ -33,7 +39,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-east-1:*:*"
+      Resource: "arn:aws:dynamodb:us-east-2:*:*"
 
 functions:
   # Defines an HTTP API endpoint that calls the main function in create.js
@@ -50,28 +56,31 @@ functions:
           method: post
           cors: true
           authorizer: aws_iam
-          get:
-            # Defines an HTTP API endpoint that calls the main function in get.js
-            # - path: url path is /notes/{id}
-            # - method: GET request
+
+  get:
+    # Defines an HTTP API endpoint that calls the main function in get.js
+    # - path: url path is /notes/{id}
+    # - method: GET request
     handler: get.main
     events:
       - http:
           path: notes/{id}
           method: get
           cors: true
-          authorizer: aws_iam
-          list:
-            # Defines an HTTP API endpoint that calls the main function in list.js
-            # - path: url path is /notes
-            # - method: GET request
+          # authorizer: aws_iam
+
+  list:
+    # Defines an HTTP API endpoint that calls the main function in list.js
+    # - path: url path is /notes
+    # - method: GET request
     handler: list.main
     events:
       - http:
           path: notes
           method: get
           cors: true
-          authorizer: aws_iam
+          # authorizer: aws_iam
+
   update:
     # Defines an HTTP API endpoint that calls the main function in update.js
     # - path: url path is /notes/{id}
@@ -82,7 +91,8 @@ functions:
           path: notes/{id}
           method: put
           cors: true
-          authorizer: aws_iam   
+          # authorizer: aws_iam
+
   delete:
     # Defines an HTTP API endpoint that calls the main function in delete.js
     # - path: url path is /notes/{id}
@@ -93,7 +103,8 @@ functions:
           path: notes/{id}
           method: delete
           cors: true
-          authorizer: aws_iam   
+          # authorizer: aws_iam
+
   billing:
     # Defines an HTTP API endpoint that calls the main function in billing.js
     # - path: url path is /billing
@@ -104,4 +115,9 @@ functions:
           path: billing
           method: post
           cors: true
-          authorizer: aws_iam  
+          # authorizer: aws_iam
+
+          # Create our resources with separate CloudFormation templates
+resources:
+  # API Gateway Errors
+  - ${file(resources/api-gateway-errors.yml)}
